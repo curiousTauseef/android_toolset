@@ -23,9 +23,10 @@ import sys
 import struct
 import os
 
-#http://bluebox.com/corporate-blog/bluebox-uncovers-android-master-key/
-#http://blog.sina.com.cn/s/blog_be6dacae0101bksm.html
-#http://www.saurik.com/id/18/
+#1.http://bluebox.com/corporate-blog/bluebox-uncovers-android-master-key/
+#2.http://blog.sina.com.cn/s/blog_be6dacae0101bksm.html
+#3.http://www.saurik.com/id/18/
+#4.http://www.saurik.com/id/19
 
 def usage():
     print "[usage] python detector.py apkfile"
@@ -71,6 +72,7 @@ def parse_apk_file(fd, file_size):
 
     local_file_header_offsets = []
     file_names = []
+    file_names_length = []
 
     #1. find the eocdr
     for i in reversed(xrange(file_size - 4)):
@@ -101,6 +103,7 @@ def parse_apk_file(fd, file_size):
 
     is_exploit3 = False
     is_exploit1 = False
+    is_exploit4 = False
 
     for i in xrange(n_cdr):
         # print hex(c_o_cdr)
@@ -140,6 +143,7 @@ def parse_apk_file(fd, file_size):
             break
 
         file_names.append(file_name)
+        file_names_length.append(filename_length)
 
         c_o_cdr += 46 + filename_length + filecomment_length + extra_field_length
 
@@ -157,6 +161,8 @@ def parse_apk_file(fd, file_size):
         exit(-1)
 
     for local_file_header_offset in local_file_header_offsets:
+        index = local_file_header_offsets.index(local_file_header_offset)
+
         fd.seek(local_file_header_offset)
         ldr_header = struct.unpack("<I", fd.read(4))[0]
 
@@ -164,7 +170,16 @@ def parse_apk_file(fd, file_size):
             die ("Corrupted apk file. Invalid local file header (" + hex(ldr_header) + ")")
 
         fd.seek(local_file_header_offset + 26)
+
         filename_length = struct.unpack("<H", fd.read(2))[0]
+
+        if (file_names_length[index] != filename_length):
+            is_exploit4 = True
+            print ("\t--> Exploit 4 detected: [" + file_names[index] + "].")
+            print "\t\t--> Java: (" + str(file_names_length[index]) + ")"
+            print "\t\t--> C++: (" + str(filename_length) + ")"
+            break
+
 
         fd.seek(local_file_header_offset + 28)
         extra_field_length = struct.unpack("<H", fd.read(2))[0]

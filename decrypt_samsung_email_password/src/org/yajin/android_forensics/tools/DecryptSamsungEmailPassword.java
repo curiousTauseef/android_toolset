@@ -1,5 +1,7 @@
 package org.yajin.android_forensics.tools;
 
+import java.util.Base64;
+
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -14,9 +16,6 @@ import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
-
-import com.sun.org.apache.xerces.internal.impl.dv.util.Base64;
-
 
 /*
  * On Samsung devices, username and password in database
@@ -69,7 +68,7 @@ public class DecryptSamsungEmailPassword {
 			
 			cipher.init(2, seckey, ivspec);
 			
-			byte[] dd = Base64.decode(encodedPassword);
+			byte[] dd = Base64.getDecoder().decode(encodedPassword);
 			
 			dd = cipher.doFinal(dd);
 			
